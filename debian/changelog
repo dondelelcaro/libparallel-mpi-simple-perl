@@ -1,0 +1,5 @@
+libparallel-mpi-simple-perl (0.10-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Don Armstrong <don@debian.org>  Tue, 13 Mar 2012 15:13:04 -0700

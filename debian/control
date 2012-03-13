@@ -1,0 +1,18 @@
+Source: libparallel-mpi-simple-perl
+Section: perl
+Priority: optional
+Maintainer: Don Armstrong <don@debian.org>
+Build-Depends: debhelper (>= 8),
+ perl,
+ perl-modules
+Standards-Version: 3.9.2
+Homepage: http://search.cpan.org/dist/Parallel-MPI-Simple/
+
+Package: libparallel-mpi-simple-perl
+Architecture: any
+Depends: ${misc:Depends}, ${perl:Depends}, ${shlibs:Depends},
+ perl
+Description: unknown
+ (no description was found)
+ .
+ This description was automagically extracted from the module by dh-make-perl.
