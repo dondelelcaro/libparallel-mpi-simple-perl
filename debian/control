@@ -12,7 +12,4 @@ Package: libparallel-mpi-simple-perl
 Architecture: any
 Depends: ${misc:Depends}, ${perl:Depends}, ${shlibs:Depends},
  perl
-Description: unknown
- (no description was found)
- .
- This description was automagically extracted from the module by dh-make-perl.
+Description: perl wrapper around MPI libraries
