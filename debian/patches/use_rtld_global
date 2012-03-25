@@ -1,0 +1,15 @@
+Index: Parallel-MPI-Simple-0.10/Simple.pm
+===================================================================
+--- Parallel-MPI-Simple-0.10.orig/Simple.pm	2012-03-24 19:39:57.000000000 -0700
++++ Parallel-MPI-Simple-0.10/Simple.pm	2012-03-24 19:40:30.000000000 -0700
+@@ -8,6 +8,10 @@
+ @ISA = qw(DynaLoader);
+ $VERSION = '0.10';
+ 
++# need to use RTLD_GLOBAL for libmpi.so to properly dlopen its
++# submodules
++sub dl_load_flags { 0x01 }
++
+ bootstrap Parallel::MPI::Simple;
+ 
+ # evil, but makes everything MPI_*, which is sort of expected
