@@ -5,11 +5,17 @@ Maintainer: Don Armstrong <don@debian.org>
 Build-Depends: debhelper (>= 9),
  perl,
  perl-modules, openmpi-bin, libopenmpi-dev, ssh
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Homepage: http://search.cpan.org/dist/Parallel-MPI-Simple/
+Vcs-Git: git://git.donarmstrong.com/libparallel-mpi-simple-perl
+Vcs-Browser: http://git.donarmstrong.com/libparallel-mpi-simple-perl
 
 Package: libparallel-mpi-simple-perl
 Architecture: any
 Depends: ${misc:Depends}, ${perl:Depends}, ${shlibs:Depends},
  perl, mpi-default-bin
 Description: perl wrapper around MPI libraries
+ Parallel::MPI::Simple is a wrapper around the MPI libraries. This
+ enables perl scripts to use MPI (Message Passing Interface) on large
+ clusters in order to invoke massively parallel processes using the
+ mpirun interface.
