@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Don Armstrong <don@debian.org>
 Build-Depends: debhelper (>= 8),
  perl,
- perl-modules, mpi-default-bin
+ perl-modules, openmpi-bin, libopenmpi-dev
 Standards-Version: 3.9.2
 Homepage: http://search.cpan.org/dist/Parallel-MPI-Simple/
 
