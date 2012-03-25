@@ -1,4 +1,7 @@
 #!/usr/bin/make -f
 
+CFLAGS += -I/usr/lib/openmpi/include/
+export CFLAGS
+
 %:
 	dh $@
