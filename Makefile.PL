@@ -21,18 +21,20 @@ ENDOFMESSAGE
 my $mpirun = "";
 my ($libs, $ccflags) = ("", "");
 
+$ENV{MPI_OPTIONS} //= "--hostfile ./debian/mpihostfile";
+
 if ($ENV{FORCE_MPIRUN}) {
     $mpirun = $ENV{FORCE_MPIRUN};
 }
 else {
     foreach my $mpi_try (qw(mpiexec mpirun)) {
-	my $test = join("",`$mpi_try -n 1 echo test`);
+	my $test = join("",`$mpi_try $ENV{MPI_OPTIONS} -n 1 echo test`);
 	$mpirun = $mpi_try unless $! =~ /No such file or directory/;
 	last if $mpirun;
     }
     
     if (!$mpirun) {
-	print STDERR "Failed to run `$mpirun -n 1 echo test`: $!\n";
+	print STDERR "Failed to run `$mpirun $ENV{MPI_OPTIONS} -n 1 echo test`: $!\n";
 	print STDERR "It looks like you don't have mpi installed, re-run build with env: FORCE_MPIRUN=1 to ignore\n";
 	exit(0);
     }
