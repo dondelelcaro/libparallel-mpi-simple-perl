@@ -95,6 +95,21 @@ int _Comm_size (SV* comm) {
   return tsize;
 }
 
+SV* _Comm_get_parent () {
+  MPI_Comm parent;
+  MPI_Comm_get_parent(&parent);
+  return newSViv((IV)parent);
+}
+
+SV* _Intercomm_merge(SV* intercomm, int high) {
+  MPI_Comm newintracomm;
+
+  MPI_Intercomm_merge((MPI_Comm)SvIVX(intercomm),high,&newintracomm);
+  return newSViv((IV)newintracomm);
+}
+
+
+
 /* spawns a command running on other hosts */
 SV* _Comm_spawn(SV* command, AV* argv, int maxprocs, int root, SV* comm) {
   MPI_Comm intercomm;
@@ -106,34 +121,36 @@ SV* _Comm_spawn(SV* command, AV* argv, int maxprocs, int root, SV* comm) {
   int i;
   int size;
   
-  /* create the argv needed to pass to MPI_comm_spawn */
+  /* create the argv needed to pass to MPI_Comm_spawn */
   len = av_len(argv);
   Newx(argv_new,len < 0 ? 1 : len+2,char*);
+  Newx(array_of_errcodes,maxprocs,int);
+  Newx(intercomm,1,MPI_Comm);
   for (key = 0; key <= len; key++) {
     argv_new[key]=SvPV_nolen(*av_fetch(argv,key,0));
   }
-  Newx(argv_new[len < 0 ? 0:len+1],1,char);
-  argv_new[len < 0 ? 0:len+1][0] = 0;
+  argv_new[len < 0 ? 0:len+1] = 0;
 
   /* eventually we should handle MPI_INFO, but since I don't need it
      yet, not bothering. */
-  error = MPI_comm_spawn(SvPV_nolen(command),
+  error = MPI_Comm_spawn(SvPV_nolen(command),
 			 argv_new,maxprocs,
 			 MPI_INFO_NULL,root,
 			 (MPI_Comm)SvIVX(comm),
-			 &intercomm,&array_of_errcodes);
-  Safefree(argv_new[len < 0 ? 0:len+1]);
+			 &intercomm,array_of_errcodes);
   Safefree(argv_new);
   if (error != 0)
     croak("Unable to spawn process");
   /* figure out how many processes were spawned, and check to see if there were errors */
   MPI_Comm_size(intercomm, &size);
   for(i = 0; i < size; i++) {
-    if (array_of_errcodes[i] != 0)
+    if (array_of_errcodes[i] != 0) {
+      Safefree(array_of_errcodes);
       croak("Process did not spawn properly");
+    }
   }
+  Safefree(array_of_errcodes);
   return newSViv((IV)intercomm);
-  
 }
 
 /* returns SV whose IV slot is a cast pointer to the MPI_COMM_WORLD object */
@@ -141,15 +158,24 @@ SV* COMM_WORLD () {
   return newSViv((IV)MPI_COMM_WORLD);
 }
 
+
+/* returns SV whose IV slot is a cast pointer to the MPI_COMM_SELF object */
+SV* COMM_SELF () {
+  return newSViv((IV)MPI_COMM_SELF);
+}
+
+
 /* returns SV whose IV slot is a cast pointer to the MPI_ANY_SOURCE value */
 SV* ANY_SOURCE () {
   return newSViv((IV)MPI_ANY_SOURCE);
 }
 
+
 /* returns SV whose IV slot is a cast pointer to the MPI_ANY_TAG value */
 SV* ANY_TAG () {
   return newSViv((IV)MPI_ANY_TAG);
 }
+
 
 /* calls MPI_Barrier for comm */
 int Barrier (SV*comm) {
@@ -297,14 +323,21 @@ int
 _Comm_size (comm)
 	SV *	comm
 
+
 SV *
 COMM_WORLD ()
+
+SV *
+COMM_SELF ()
 
 SV *
 ANY_SOURCE ()
 
 SV *
 ANY_TAG ()
+
+SV*
+_Comm_get_parent()
 
 int
 Barrier (comm)
@@ -323,6 +356,12 @@ int
 _Comm_compare (comm1, comm2)
 	SV *	comm1
 	SV *	comm2
+
+SV*
+_Intercomm_merge (intercomm, high)
+	SV *	intercomm
+	int	high
+
 
 void
 _Comm_free (comm)
@@ -350,3 +389,10 @@ _Comm_split (comm, colour, key)
 	int	colour
 	int	key
 
+SV *
+_Comm_spawn (command, argv, maxprocs, root, comm)
+        SV* command
+        AV* argv
+        int maxprocs
+        int root
+        SV* comm

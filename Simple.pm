@@ -16,10 +16,11 @@ sub import {
     my $call = (caller())[0];
     no strict 'refs';
     # subs (MPI_ function calls)
-    foreach (qw(Init Finalize COMM_WORLD ANY_SOURCE ANY_TAG Comm_rank Comm_size
+    foreach (qw(Init Finalize COMM_WORLD COMM_SELF ANY_SOURCE ANY_TAG Comm_rank Comm_size
 		Recv Send Barrier Bcast Gather
 		Scatter Allgather Alltoall Reduce
 		Comm_compare Comm_dup Comm_free Comm_split Comm_spawn
+		Intercomm_merge Comm_get_parent
 	       )) {
 	*{$call.'::MPI_'.$_} = \&$_;
     }
@@ -515,12 +516,53 @@ communicator which communicates between the parents and the children.
 
 =cut
 
-
 sub Comm_spawn {
     my ($maxprocs,$comm,$root,$command,@arguments) = @_;
-    return _Comm_spawn($command,@arguments,$maxprocs,$root,$comm);
+    return _Comm_spawn($command,\@arguments,$maxprocs,$root,$comm);
 }
 
+
+=head2 MPI_Comm_spawn
+
+ $parent_comm = MPI_Comm_get_parent();
+
+Returns the parent intercommunicator. This is primarily useful when
+merging intercommunicators into one intracommunicator. [For example,
+if you wanted to communicate between spawned children and a parent
+process.]
+
+=cut
+
+sub Comm_get_parent{
+    return _Comm_get_parent();
+}
+
+=head2 MPI_Intercomm_merge
+
+ my $intracomm = MPI_Intercomm_merge($intercomm,$high);
+
+Returns a merged intracommunicator given an intercomm. If $high is
+true, the rank in the merged intracommunicator of processes will be
+higher than those with high false. If high is the same value in all
+merging processes, the order is undefined.
+
+An example:
+ # in the master process
+ my $intercomm = MPI_Comm_spawn(1,MPI_COMM_SELF,$rank,"test2.pl");
+ my $intracomm = MPI_Intercomm_merge($intercomm,0);
+ print(MPI_Recv(1,0,$intracomm));
+
+ # in test2.pl
+ my $intercomm = MPI_Comm_get_parent();
+ my $intracomm = MPI_Intercomm_merge($intercomm,1);
+ print(MPI_Send("Hello world!",0,0,$intracomm));
+
+=cut
+
+sub Intercomm_merge {
+    my ($comm,$high) = @_;
+    return _Intercomm_merge($comm,$high?1:0);
+}
 
 1; # I am the ANTI-POD!
 
