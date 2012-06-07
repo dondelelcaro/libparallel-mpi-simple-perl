@@ -9,13 +9,14 @@ use Storable qw(nfreeze thaw);
 $VERSION = '0.10';
 
 bootstrap Parallel::MPI::Simple;
+sub dl_load_flags { 0x01 }
 
 # evil, but makes everything MPI_*, which is sort of expected
 sub import {
     my $call = (caller())[0];
     no strict 'refs';
     # subs (MPI_ function calls)
-    foreach (qw(Init Finalize COMM_WORLD ANY_SOURCE Comm_rank Comm_size
+    foreach (qw(Init Finalize COMM_WORLD ANY_SOURCE ANY_TAG Comm_rank Comm_size
 		Recv Send Barrier Bcast Gather
 		Scatter Allgather Alltoall Reduce
 		Comm_compare Comm_dup Comm_free Comm_split Comm_spawn
@@ -296,6 +297,8 @@ which they were sent.  No other guarantees of timeliness or ordering
 can be given.  If needed, use C<MPI_Barrier>.
 
 C<$source> can be C<MPI_ANY_SOURCE> which will do what it says.
+
+C<$msg_tag> can be C<MPI_ANY_TAG> which will match any tag.
 
 =cut
 
