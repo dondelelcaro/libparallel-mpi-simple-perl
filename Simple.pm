@@ -9,6 +9,7 @@ use Storable qw(nfreeze thaw);
 $VERSION = '0.10';
 
 bootstrap Parallel::MPI::Simple;
+sub dl_load_flags { 0x01 }
 
 # evil, but makes everything MPI_*, which is sort of expected
 sub import {
