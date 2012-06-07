@@ -18,7 +18,7 @@ sub import {
     foreach (qw(Init Finalize COMM_WORLD ANY_SOURCE Comm_rank Comm_size
 		Recv Send Barrier Bcast Gather
 		Scatter Allgather Alltoall Reduce
-		Comm_compare Comm_dup Comm_free Comm_split
+		Comm_compare Comm_dup Comm_free Comm_split Comm_spawn
 	       )) {
 	*{$call.'::MPI_'.$_} = \&$_;
     }
@@ -500,6 +500,24 @@ sub Reduce {
   # node 0 only to distribute via Broadcast
   Bcast($rt, 0, $comm);
 }
+
+=head2 MPI_Comm_spawn
+
+ $intercomm = MPI_Comm_spawn($maxprocs,$comm,$root,$command,@arguments);
+
+Spawns C<$maxprocs> binaries running C<$command> with arguments
+C<@arguments>. Will die on any failures to launch commands. Returns a
+communicator which communicates between the parents and the children.
+
+
+=cut
+
+
+sub Comm_spawn {
+    my ($maxprocs,$comm,$root,$command,@arguments) = @_;
+    return _Comm_spawn($command,@arguments,$maxprocs,$root,$comm);
+}
+
 
 1; # I am the ANTI-POD!
 

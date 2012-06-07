@@ -95,6 +95,47 @@ int _Comm_size (SV* comm) {
   return tsize;
 }
 
+/* spawns a command running on other hosts */
+SV* _Comm_spawn(SV* command, AV* argv, int maxprocs, int root, SV* comm) {
+  MPI_Comm intercomm;
+  int* array_of_errcodes;
+  int error;
+  char** argv_new;
+  I32 len;
+  I32 key;
+  int i;
+  int size;
+  
+  /* create the argv needed to pass to MPI_comm_spawn */
+  len = av_len(argv);
+  Newx(argv_new,len < 0 ? 1 : len+2,char*);
+  for (key = 0; key <= len; key++) {
+    argv_new[key]=SvPV_nolen(*av_fetch(argv,key,0));
+  }
+  Newx(argv_new[len < 0 ? 0:len+1],1,char);
+  argv_new[len < 0 ? 0:len+1][0] = 0;
+
+  /* eventually we should handle MPI_INFO, but since I don't need it
+     yet, not bothering. */
+  error = MPI_comm_spawn(SvPV_nolen(command),
+			 argv_new,maxprocs,
+			 MPI_INFO_NULL,root,
+			 (MPI_Comm)SvIVX(comm),
+			 &intercomm,&array_of_errcodes);
+  Safefree(argv_new[len < 0 ? 0:len+1]);
+  Safefree(argv_new);
+  if (error != 0)
+    croak("Unable to spawn process");
+  /* figure out how many processes were spawned, and check to see if there were errors */
+  MPI_Comm_size(intercomm, &size);
+  for(i = 0; i < size; i++) {
+    if (array_of_errcodes[i] != 0)
+      croak("Process did not spawn properly");
+  }
+  return newSViv((IV)intercomm);
+  
+}
+
 /* returns SV whose IV slot is a cast pointer to the MPI_COMM_WORLD object */
 SV* COMM_WORLD () {
   return newSViv((IV)MPI_COMM_WORLD);
